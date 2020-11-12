@@ -10,11 +10,7 @@ class Home_Model extends CI_Model{
     public function get_filmes()
     {
         $query = (object)array();
-        //$query = $this->db->get("filme")->result();
-        echo '<pre>';
-        print_r($this->db->query("SELECT * FROM filme"));
-        echo '</pre>';
-        exit;
+        $query = $this->db->get("filme")->result();
         if($query)
         {
             foreach($query->result() as $item)
@@ -92,11 +88,12 @@ class Home_Model extends CI_Model{
 
     public function insere_filme()
     {
+        if(sizeof($_POST) == 0) return;
         $rst = (object)array("result" => false, "msg" => "", "tipo" => 0);
         $data = (object)$this->input->post();
-
+        
         $this->db->set("titulo", $data->titulo);
-        $this->db->set("data_lancamento", $this->formata_data($data->data_lancamento, "dt2bd"));
+        $this->db->set("ano_lancamento", $this->formata_data($data->ano_lancamento, "dt2bd"));
         $this->db->set("duracao", $data->duracao);
         $this->db->set("sinopse", $data->sinopse);
 
@@ -121,6 +118,10 @@ class Home_Model extends CI_Model{
         {
             if($this->db->insert("filme"))
             {
+                $id = $this->db->insert_id();
+                $this->insere_categoria($data->categoria, $id);
+                $this->insere_plataforma($data->plataforma, $id);
+
                 $rst->result = true;
                 $rst->msg = "Filme Inserido com sucesso";
             }
@@ -157,12 +158,11 @@ class Home_Model extends CI_Model{
         }
     }
 
-    public function insere_categoria($categoria, $id_filme)
+    public function insere_categoria($array_categoria, $id_filme)
     {
-        $array_categoria = explode(",", $categoria);
         $verif = 1;
 
-        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->array_result();
+        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->result_array();
 
         foreach($array_categoria as $item)
         {
@@ -178,7 +178,7 @@ class Home_Model extends CI_Model{
             }
         }
 
-        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->array_result();
+        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->result_array();
 
         foreach($query as $item)
         {

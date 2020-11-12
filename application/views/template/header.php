@@ -30,7 +30,7 @@
             <a class="nav-link" href="<?= base_url("Home") ?>">Pagina Inicial <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="cadastro.php">Inserir Filme</a>
+            <a class="nav-link" href="<?= base_url("Home/insere_filme") ?>">Inserir Filme</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="<?= base_url("Home/teste_funcoes") ?>">Testes de Funções</a>

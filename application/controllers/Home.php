@@ -16,6 +16,18 @@ class Home extends CI_Controller{
         $this->load->view("template/footer", $data, false);
     }
 
+    public function insere_filme($id = null)
+    {
+        $data["erro"] = $this->m_home->insere_filme();
+        if(isset($data['error']) && $data['error']->result == true)
+            redirect(base_url("Home/index/"));
+        $data["categoria"] = $this->m_home->get_categoria();
+        $data["plataforma"] = $this->m_home->get_plataformas();
+        $this->load->view("template/header", $data, false);
+        $this->load->view("home/form_insere", $data, false);
+        $this->load->view("template/footer", $data, false);
+    }
+
     public function teste_funcoes()
     {
         $data["teste"] = $this->m_home->monta_lista_teste();
@@ -23,12 +35,6 @@ class Home extends CI_Controller{
         $this->load->view("template/header", $data, false);
         $this->load->view("home/lista_teste", $data, false);
         $this->load->view("template/footer", $data, false);
-    }
-
-    public function insere_filme()
-    {
-        $rst = $this->m_home->insere_filme();
-        echo json_encode($rst, JSON_UNESCAPED_UNICODE);
     }
     
 }
