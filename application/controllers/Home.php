@@ -11,6 +11,10 @@ class Home extends CI_Controller{
     public function index()
     {
         $data["filmes"] = $this->m_home->get_filmes();
+        // echo '<pre>';
+        // print_r($data);
+        // echo '</pre>';
+        // exit;
         $this->load->view("template/header", $data, false);
         $this->load->view("home/lista", $data, false);
         $this->load->view("template/footer", $data, false);
@@ -19,6 +23,10 @@ class Home extends CI_Controller{
     public function insere_filme($id = null)
     {
         $data["erro"] = $this->m_home->insere_filme();
+        if($id != null)
+            $data["filme"] = $this->m_home->get_filmes($id)[0];
+        
+
         if(isset($data['error']) && $data['error']->result == true)
             redirect(base_url("Home/index/"));
         $data["categoria"] = $this->m_home->get_categoria();
@@ -35,6 +43,12 @@ class Home extends CI_Controller{
         $this->load->view("template/header", $data, false);
         $this->load->view("home/lista_teste", $data, false);
         $this->load->view("template/footer", $data, false);
+    }
+
+    public function exclui_filme($id)
+    {
+        $this->m_home->exclui_filme($id);
+        redirect(base_url("Home"));
     }
     
 }

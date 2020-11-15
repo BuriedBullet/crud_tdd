@@ -7,13 +7,15 @@ class Home_Model extends CI_Model{
         parent:: __construct();
     }
     
-    public function get_filmes()
+    public function get_filmes($id = null)
     {
         $query = (object)array();
+        if($id != null)
+            $this->db->where("id = $id");
         $query = $this->db->get("filme")->result();
         if($query)
         {
-            foreach($query->result() as $item)
+            foreach($query as $item)
             {
                 $item->categoria = $this->db->get_where("categoria_filme", "id_filme = $item->id")->result();
                 foreach($item->categoria as $value)
@@ -26,13 +28,14 @@ class Home_Model extends CI_Model{
                 {
                     $value->nome = $this->get_plataformas($value->plataforma);
                 }
+                $item->ano_lancamento_br = $this->formata_data($item->ano_lancamento, "bd2dt");
             }   
         }
         else
         {
-            return (object)array();
+            return array();
         }
-        
+
         return $query;
     }
 
@@ -93,7 +96,7 @@ class Home_Model extends CI_Model{
         $data = (object)$this->input->post();
         
         $this->db->set("titulo", $data->titulo);
-        $this->db->set("ano_lancamento", $this->formata_data($data->ano_lancamento, "dt2bd"));
+        $this->db->set("ano_lancamento", $data->ano_lancamento);
         $this->db->set("duracao", $data->duracao);
         $this->db->set("sinopse", $data->sinopse);
 
@@ -161,81 +164,102 @@ class Home_Model extends CI_Model{
     public function insere_categoria($array_categoria, $id_filme)
     {
         $verif = 1;
-
-        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->result_array();
-
         foreach($array_categoria as $item)
         {
-            if(array_search($item, $query) < -1)
+            $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme AND categoria = $item")->row();
+            if(!$query)
             {
                 $this->db->set("id_filme", $id_filme);
                 $this->db->set("categoria", $item);
 
-                if(!$this->db->insert("categoria_filme"))
-                {
-                    $verif = 0;
-                }
+                $this->db->insert("categoria_filme");
             }
         }
 
-        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->result_array();
+        $query = $this->db->get_where("categoria_filme", "id_filme = $id_filme")->result();
 
         foreach($query as $item)
         {
-            if(array_search($item["id"], $array_categoria) < -1)
+            $verif = 0;
+            foreach($array_categoria as $value)
             {
-                $this->db->where("id", $item["id"]);
-                if(!$this->db->delete("categoria_filme"))
+                if($value == $item->categoria)
                 {
-                    $verif = 0;
+                    $verif = 1;
                 }
             }
-        }
+
+            if($verif == 0)
+            {
+                $this->db->where("id", $item->id);
+                if($this->db->delete("categoria_filme"))
+                {
+                    $verif = 1;
+                }
+            }
+        }        
 
         return $verif;
     }
 
-    public function insere_plataforma($plataforma, $id_filme)
+    public function insere_plataforma($array_plataforma, $id_filme)
     {
-        $array_plataforma = explode(",", $plataforma);
         $verif = 1;
-
-        $query = $this->db->get_where("plataforma_filme", "id_filme = $id_filme")->array_result();
-
         foreach($array_plataforma as $item)
         {
-            if(array_search($item, $query) < -1)
+            $query = $this->db->get_where("plataforma_filme", "id_filme = $id_filme AND plataforma = $item")->row();
+            if(!$query)
             {
                 $this->db->set("id_filme", $id_filme);
                 $this->db->set("plataforma", $item);
 
-                if(!$this->db->insert("plataforma_filme"))
-                {
-                    $verif = 0;
-                }
+                $this->db->insert("plataforma_filme");
             }
         }
 
-        $query = $this->db->get_where("plataforma_filme", "id_filme = $id_filme")->array_result();
+        $query = $this->db->get_where("plataforma_filme", "id_filme = $id_filme")->result();
 
         foreach($query as $item)
         {
-            if(array_search($item["id"], $array_plataforma) < -1)
+            $verif = 0;
+            foreach($array_plataforma as $value)
             {
-                $this->db->where("id", $item["id"]);
-                if(!$this->db->delete("plataforma_filme"))
+                if($value == $item->plataforma)
                 {
-                    $verif = 0;
+                    $verif = 1;
                 }
             }
-        }
+
+            if($verif == 0)
+            {
+                $this->db->where("id", $item->id);
+                if($this->db->delete("plataforma_filme"))
+                {
+                    $verif = 1;
+                }
+            }
+        }        
 
         return $verif;
     }
 
+    public function exclui_filme($id)
+    {
+        $this->db->where("id_filme", $id);
+        $this->db->delete("categoria_filme");
+
+        $this->db->where("id_filme", $id);
+        $this->db->delete("plataforma_filme");
+
+        $this->db->where("id", $id);
+        $this->db->delete("filme");
+
+        return true;
+    }
+
     public function test_type_return_get_filmes()
     {
-        return $this->unit->run(gettype ($this->get_filmes()), "object", "Retorna get_filmes", "Verificação de retorno da função");
+        return $this->unit->run(gettype ($this->get_filmes()), "array", "Retorna a lista de files", "Verificação se está retornando a lista de filmes");
     }
 
     public function test_lista_categorias()
